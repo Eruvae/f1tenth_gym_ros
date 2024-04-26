@@ -35,6 +35,12 @@ def generate_launch_description():
         'sim.yaml'
         )
     config_dict = yaml.safe_load(open(config, 'r'))
+
+    map_path = config_dict['bridge']['ros__parameters']['map_path']
+    if not os.path.isabs(map_path):
+        map_path = os.path.join(get_package_share_directory('f1tenth_gym_ros'), map_path)
+        config_dict['bridge']['ros__parameters']['map_path'] = map_path
+
     has_opp = config_dict['bridge']['ros__parameters']['num_agent'] > 1
     teleop = config_dict['bridge']['ros__parameters']['kb_teleop']
 
@@ -42,7 +48,7 @@ def generate_launch_description():
         package='f1tenth_gym_ros',
         executable='gym_bridge',
         name='bridge',
-        parameters=[config]
+        parameters=[config_dict['bridge']['ros__parameters']]
     )
     rviz_node = Node(
         package='rviz2',
@@ -53,7 +59,7 @@ def generate_launch_description():
     map_server_node = Node(
         package='nav2_map_server',
         executable='map_server',
-        parameters=[{'yaml_filename': config_dict['bridge']['ros__parameters']['map_path'] + '.yaml'},
+        parameters=[{'yaml_filename': map_path + '.yaml'},
                     {'topic': 'map'},
                     {'frame_id': 'map'},
                     {'output': 'screen'},
