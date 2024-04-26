@@ -95,7 +95,7 @@ You can then run another node by creating another bash session in `tmux`.
 
 # Configuring the simulation
 - The configuration file for the simulation is at `f1tenth_gym_ros/config/sim.yaml`.
-- Topic names and namespaces can be configured but is recommended to leave uncahnged.
+- Topic names and namespaces can be configured but is recommended to leave unchanged.
 - The map can be changed via the `map_path` parameter. You'll have to use the full path to the map file in the container. The map follows the ROS convention. It is assumed that the image file and the `yaml` file for the map are in the same directory with the same name. See the note below about mounting a volume to see where to put your map file.
 - The `num_agent` parameter can be changed to either 1 or 2 for single or two agent racing.
 - The ego and opponent starting pose can also be changed via parameters, these are in the global map coordinate frame.
