@@ -42,7 +42,6 @@ def generate_launch_description():
         config_dict['bridge']['ros__parameters']['map_path'] = map_path
 
     has_opp = config_dict['bridge']['ros__parameters']['num_agent'] > 1
-    teleop = config_dict['bridge']['ros__parameters']['kb_teleop']
 
     bridge_node = Node(
         package='f1tenth_gym_ros',
