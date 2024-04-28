@@ -5,16 +5,16 @@ This is a containerized ROS communication bridge for the F1TENTH gym environment
 
 **Supported System:**
 
-- Ubuntu (tested on 20.04) native with ROS 2
-- Ubuntu (tested on 20.04) with an NVIDIA gpu and nvidia-docker2 support
-- Windows 10, macOS, and Ubuntu without an NVIDIA gpu (using noVNC)
+- Ubuntu (tested on 22.04) native with ROS 2
+- Ubuntu (tested on 20.04) with an NVIDIA gpu and nvidia-container-toolkit support
+- Windows 10/11, macOS, and Ubuntu without an NVIDIA gpu (using noVNC)
 
 This installation guide will be split into instruction for installing the ROS 2 package natively, and for systems with or without an NVIDIA gpu in Docker containers.
 
-## Native on Ubuntu 20.04
+## Native on Ubuntu 22.04
 
 **Install the following dependencies:**
-- **ROS 2** Follow the instructions [here](https://docs.ros.org/en/foxy/Installation.html) to install ROS 2 Foxy.
+- **ROS 2** Follow the instructions [here](https://docs.ros.org/en/humble/Installation.html) to install ROS 2 Humble.
 - **F1TENTH Gym**
   ```bash
   git clone https://github.com/f1tenth/f1tenth_gym
@@ -28,13 +28,11 @@ This installation guide will be split into instruction for installing the ROS 2 
   cd $HOME/sim_ws/src
   git clone https://github.com/f1tenth/f1tenth_gym_ros
   ```
-- Update correct parameter for path to map file:
-  Go to `sim.yaml` [https://github.com/f1tenth/f1tenth_gym_ros/blob/main/config/sim.yaml](https://github.com/f1tenth/f1tenth_gym_ros/blob/main/config/sim.yaml) in your cloned repo, change the `map_path` parameter to point to the correct location. It should be `'<your_home_dir>/sim_ws/src/f1tenth_gym_ros/maps/levine'`
 - Install dependencies with rosdep:
   ```bash
-  source /opt/ros/foxy/setup.bash
+  source /opt/ros/humble/setup.bash
   cd ..
-  rosdep install -i --from-path src --rosdistro foxy -y
+  rosdep install -i --from-path src --rosdistro humble -y
   ```
 - Build the workspace: ```colcon build```
 
@@ -43,7 +41,7 @@ This installation guide will be split into instruction for installing the ROS 2 
 **Install the following dependencies:**
 
 - **Docker** Follow the instructions [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/) to install Docker. A short tutorial can be found [here](https://docs.docker.com/get-started/) if you're not familiar with Docker. If you followed the post-installation steps you won't have to prepend your docker and docker-compose commands with sudo.
-- **nvidia-docker2**, follow the instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) if you have a support GPU. It is also possible to use Intel integrated graphics to forward the display, see details instructions from the Rocker repo. If you are on windows with an NVIDIA GPU, you'll have to use WSL (Windows Subsystem for Linux). Please refer to the guide [here](https://developer.nvidia.com/cuda/wsl), [here](https://docs.nvidia.com/cuda/wsl-user-guide/index.html), and [here](https://dilililabs.com/zh/blog/2021/01/26/deploying-docker-with-gpu-support-on-windows-subsystem-for-linux/).
+- **nvidia-container-toolkit**, follow the instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) if you have a supported GPU. It is also possible to use Intel integrated graphics to forward the display, see detailed instructions from the Rocker repo. If you are on windows with an NVIDIA GPU, you'll have to use WSL (Windows Subsystem for Linux). Please refer to the guide [here](https://developer.nvidia.com/cuda/wsl), [here](https://docs.nvidia.com/cuda/wsl-user-guide/index.html), and [here](https://dilililabs.com/zh/blog/2021/01/26/deploying-docker-with-gpu-support-on-windows-subsystem-for-linux/).
 - **rocker** [https://github.com/osrf/rocker](https://github.com/osrf/rocker). This is a tool developed by OSRF to run Docker images with local support injected. We use it for GUI forwarding. If you're on Windows, WSL should also support this.
 
 **Installing the simulation:**
@@ -63,7 +61,7 @@ $ rocker --nvidia --x11 --volume .:/sim_ws/src/f1tenth_gym_ros -- f1tenth_gym_ro
 
 **Install the following dependencies:**
 
-If your system does not support nvidia-docker2, noVNC will have to be used to forward the display.
+If your system does not support nvidia-container-toolkit, noVNC will have to be used to forward the display.
 - Again you'll need **Docker**. Follow the instruction from above.
 - Additionally you'll need **docker-compose**. Follow the instruction [here](https://docs.docker.com/compose/install/) to install docker-compose.
 
@@ -76,7 +74,7 @@ docker-compose up
 ``` 
 3. In a separate terminal, run the following, and you'll have the a bash session in the simulation container. `tmux` is available for convenience.
 ```bash
-docker exec -it f1tenth_gym_ros-sim-1 /bin/bash
+docker exec -it f1tenth_gym_ros_sim_1 /bin/bash
 ```
 4. In your browser, navigate to [http://localhost:8080/vnc.html](http://localhost:8080/vnc.html), you should see the noVNC logo with the connect button. Click the connect button to connect to the session.
 
@@ -85,7 +83,7 @@ docker exec -it f1tenth_gym_ros-sim-1 /bin/bash
 1. `tmux` is included in the contianer, so you can create multiple bash sessions in the same terminal.
 2. To launch the simulation, make sure you source both the ROS2 setup script and the local workspace setup script. Run the following in the bash session from the container:
 ```bash
-$ source /opt/ros/foxy/setup.bash
+$ source /opt/ros/humble/setup.bash
 $ source install/local_setup.bash
 $ ros2 launch f1tenth_gym_ros gym_bridge_launch.py
 ```
@@ -96,7 +94,8 @@ You can then run another node by creating another bash session in `tmux`.
 # Configuring the simulation
 - The configuration file for the simulation is at `f1tenth_gym_ros/config/sim.yaml`.
 - Topic names and namespaces can be configured but is recommended to leave unchanged.
-- The map can be changed via the `map_path` parameter. You'll have to use the full path to the map file in the container. The map follows the ROS convention. It is assumed that the image file and the `yaml` file for the map are in the same directory with the same name. See the note below about mounting a volume to see where to put your map file.
+- The map can be changed via the `map_path` parameter. It supports relative or absolute paths. In case of a relative path, note that it is relative to the package share directory, not the source directory. By default, the map folder is copied to the package share directory on compilation. You may copy other folders by adjusting `setup.py`, or replace the path with an abosolute path.
+- The map follows the ROS convention. It is assumed that the image file and the `yaml` file for the map are in the same directory with the same name. See the note below about mounting a volume to see where to put your map file.
 - The `num_agent` parameter can be changed to either 1 or 2 for single or two agent racing.
 - The ego and opponent starting pose can also be changed via parameters, these are in the global map coordinate frame.
 
